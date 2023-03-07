@@ -4,16 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=0;" name="viewport" />
-    <title>Python实现网络爬虫 | RavelloH’s Blog</title>
-    <meta name="keywords" content="RavelloH,blog,python,spider,html">
-    <meta name="description" content="A Blog by RavelloH">
+    <title>龙芯派2K1000 SylixOS RTC设备DS3231驱动实现 | TuoYuxuan’s Blog</title>
+    <meta name="keywords" content="T,blog,">
+    <meta name="description" content="A Blog by T">
 
     <!-- CSS -->
-    <link type="text/css" rel="stylesheet" href="/css/common.css">
-    <link type="text/css" rel="stylesheet" href="/css/style.css">
-    <link type="text/css" rel="stylesheet" href="/css/iconfont.css">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="icon" href="/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="../../css/common.css">
+    <link type="text/css" rel="stylesheet" href="../../css/style.css">
+    <link type="text/css" rel="stylesheet" href="../../css/iconfont.css">
+    <link rel="manifest" href="../../site.webmanifest">
+    <link rel="icon" href="../../favicon.ico">
 
 
 
@@ -28,29 +28,32 @@
             <header>
                 <h2 class="logo">
                     <a href="/" class='logos'>
-                        <img class="logoimg" src="/img/avatar.jpg" style="width: 1.5em;border-radius: 50%;"
+                        <img class="logoimg" src="../../img/avatar.jpg" style="width: 1.5em;border-radius: 50%;"
                             alt="avatar">
-                        <img class="logoname" src="/img/RavelloH.svg" alt="RavelloH's Blog">
+                        <img class="logoname" src="../../img/BlindSniper.svg" alt="TuoYuxuan's Blog">
                     </a>
 
                 </h2>
                 <div class="headers">
                     <nav>
-                        <a href="/">
+                        <a href="../../index.html">
                             HOME
                         </a>
-                        <a href="/works/">
-                            WORKS
+                        <a href="../../sports/">
+                            SPORTS
                         </a>
-                        <a href="/articles/">
+                        <a href="../../articles/">
                             ARTICLES
                         </a>
-                        <a href="/tag/">
-                            TAG
+                        <a href="../../confessions/">
+                            CONFESSIONS
                         </a>
-                        <a href="/about/">
-                            ABOUT
+                        <a href="../../journey/">
+                            JOURNEY
                         </a>
+						<a href="../../about/">
+						    ABOUT
+						</a>
                         </p>
                     </nav>
                 </div>
@@ -60,45 +63,63 @@
 
             <div class="overlay"></div>
             <div class="article" id="text">
-                <h2>Python实现网络爬虫</h2>
-                <span class="iconfontmini icon-clock"></span> 2022-03-23 • <span
+                <br><br><h2>龙芯派2K1000 SylixOS RTC设备DS3231驱动实现</h2>
+                <span class="iconfontmini icon-clock"></span> 2023-02-28 • <span
                     class="iconfontmini icon-classification"></span>
-                <a class="c" href="/classification/#技术">技术</a> • 
+                <a class="c" href="../../classification/#SylixOS">SylixOS</a> -<a class="c" href="../classification/#驱动">驱动</a> • 
                 <span class="iconfontmini icon-tag"></span>
-                <a class="tag" href="/tag/#python">PYTHON</a>
-                <a class="tag" href="/tag/#spider">SPIDER</a> • <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
+                <a class="tag" href="../tag/#c">C</a><a class="tag" href="../tag/#RTC">RTC</a> • <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
                 <div>
                     <h4><b><em>Menu - 目录列表</em></b></h4>
                     <a class="m" href="#前言">前言</a>
-                    <a class="m" href="#效果">效果</a>
-                    <a class="m" href="#实现方式">实现方式</a>
-                    <a class="m" href="#代码">代码</a>
-                    <a class="m" href="#下载">下载</a>
+                    <a class="m" href="#DS3231 设备介绍">DS3231 设备介绍</a>
+                    <a class="m" href="#驱动开发">驱动开发</a>
+                    <a class="m" href="#RTC 设备驱动安装">RTC 设备驱动安装</a>
+                    <a class="m" href="#字符设备驱动">字符设备驱动</a>
                 </div>
                 <hr>
-                <br><br>
-                <div class="center info"><em>
-                        <span id="loadingtext"></span>
-                    </em>
-                </div>
-                <br>
-                <h4><a name="前言" href="#前言">#前言</a></h4>
+                <h4><a name="前言" href="#前言">前言</a></h4>
                 <p>
-                    最近在参与一个数据收集的项目，需要大量获取图像及链接等，用人力显然是完成不过来了，<br>
-                    于是索性就做个爬虫，一劳永逸了。<br>
-                    这里因为项目比较小，对效率要求不大，就选择了使用Python而不是C语言。<br>
-                    </del>(也因为Python用起来更省事)</del><br>
-                    本文所含代码可直接跳转<a class="m" href="#代码">#代码</a>查看
+                    在我2022年进入翼辉时第一个任务是需要在龙芯派2K1000 SylixOS 上进行了 DS3231 RTC 设备驱动开发。<br>
+                    本篇文章针对这部分的内容进行总结记录。
                 </p>
                 <br>
-                <h4><a name="效果" href="#效果">#效果</a></h4>
-                <img class="img" id="img1" src="img1.jpg">
+                <h4><a name="DS3231 设备介绍" href="#DS3231 设备介绍">DS3231 设备介绍</a></h4>
                 <p>
-                    效果如上图，即输入网页链接，自动提取所含图片链接，<br>
-                    同时自动转化相对路径为绝对路径，方便下载。<br>
-                    最后每行一个print出来，方便统一存储/下载。<br>
-                    <br>
+                    DS3231是一种低成本，极其精确的I2C实时时钟(RTC)与集成温度补偿晶体振荡器(TCXO)和晶体。该设备包含一个电池输入，并保持准确的时间，当设备的主电源中断。
+					晶体谐振器的集成提高了设备的长期精度，并减少了生产线中的零件数量。RTC维护秒、分钟、小时、日、日、月和年信息。
+					月末的日期在少于31天的月份中自动调整，包括闰年的修正。此时钟采用24小时或12小时制，并附有上午/下午指示。提供两个可编程的一天时间报警和一个可编程的方波输出。
+					地址和数据通过I2C双向总线串行传输。<br><br>
+                    关于DS3231各个寄存器信息如下：
                 </p>
+				<pre>
+					<span>/*********************************************************************************************************</span>
+					<span> DS3231寄存器地址</span>
+					<span>*********************************************************************************************************/</span>
+					<span>#define DS3231_ADDR           (0b1101000)</span>
+					<span>#define DS3231_I2C_NAME       ("/bus/i2c/0")</span>
+					<span>#define DS3231_DEV_NAME       ("/dev/ds3231")</span>
+					<span>#define rSEC                  (0x00)                                    /*  Second                      */</span>
+					<span>#define rHOUR                 (0x02)                                    /*  Hour                        */</span>
+					<span>#define rMIN                  (0x01)                                    /*  Minute                      */</span>
+					<span>#define rDAY                  (0x03)                                    /*  Day                         */</span>
+					<span>#define rDATE                 (0x04)                                    /*  Date                        */</span>
+					<span>#define rMONCENTURY           (0x05)                                    /*  Month/century               */</span>
+					<span>#define rYEAR                 (0x06)                                    /*  Year                        */</span>
+					<span>#define rALM1SEC              (0x07)                                    /*  Alarm1 second               */</span>
+					<span>#define rALM1MIN              (0x08)                                    /*  Alarm1 minute               */</span>
+					<span>#define rALM1HOUR             (0x09)                                    /*  Alarm1 hour                 */</span>
+					<span>#define rALM1DAYDATE          (0x0A)                                    /*  Alarm1 day&date             */</span>
+					<span>#define rALM2MIN              (0x0B)                                    /*  Alarm2 minute               */</span>
+					<span>#define rALM2HOUR             (0x0C)                                    /*  Alarm2 hour                 */</span>
+					<span>#define rALM2DAYDATE          (0x0D)                                    /*  Alarm2 day&date             */</span>
+					<span>#define rCON                  (0x0E)                                    /*  Control                     */</span>
+					<span>#define rSTATUS               (0x0F)                                    /*  Control/Status              */</span>
+					<span>#define rAGING                (0x10)                                    /*  Aging Offse                 */</span>
+					<span>#define rTEMP1                (0x11)                                    /*  MSB of Temp                 */</span>
+					<span>#define rTEMP2                (0x12)                                    /*  LSB of Temp                 */</span>
+				    </pre>
+				<br>
                 <h4><a name="实现方式" href="#实现方式">#实现方式</a></h4>
                 <p>
                     Python在爬虫方面已经十分成熟，这里引用第三方库BeautifulSoup与urllib，若无这些库请下载:
