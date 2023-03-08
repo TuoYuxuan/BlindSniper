@@ -163,44 +163,9 @@
 
         <div class="overlay"></div>
         <div class="text title" id="text">
-            <h3>Confessions / 随笔</h3>
+            <h3>Confessions </h3>
             <br>
-            <div class='searchbox'>
-                <form class="searchbox" onSubmit="return check();" autocomplete="off">
-                    <input type="text" placeholder="从所有文章内检索..." name="search" oninput="searchtext()" onpropertychange="searchtext()">
-                    <button type="button" id='searchbutton'><span class="iconfontmini icon-search"></span></button>
-                    <div class="resultlist" id="resultlist">
-                        <i>- 搜索 -</i><hr><p align="center">
-                            输入关键词以在文章标题及正文中查询
-                        </p>
-                        <hr><a href="https://github.com/ravelloh/RPageSearch">Search powered by RavelloH's RPageSearch</a>
-                    </div>
-                </form>
-            </div>
-            <div id='info'>
-                <span id="jumping">此页面内容需要使用JavaScript</span>
-                <script type="text/javascript">
-                    var jumping = document.getElementById("jumping");
-                    function show_runtime() {
-                        X = new Date("12/24/2022 00:00:00"); //设定时间(月\日\年 时:分:秒))
-                        Y = new Date(); //获取当前时间
-                        T = (Y.getTime() - X.getTime());
-                        M = 24 * 60 * 60 * 1000;
-                        a = T / M;
-                        A = Math.floor(a);
-                        b = (a - A) * 24;
-                        B = Math.floor(b);
-                        c = (b - B) * 60;
-                        C = Math.floor((b - B) * 60);
-                        D = Math.floor((c - C) * 60);
-                        jumping.innerHTML = "<br>记录并索引所有文章。<br><span id='jum' >Loading...</span><br>"
-                        textcache = "最近更新于" + A + "天前。"
-
-                    }
-                    show_runtime();
-                </script>
-            </div>
-
+			<h4>音乐 & 随笔</h4>
         </div>
 
         <div class="text listline" id="text">
@@ -212,12 +177,6 @@
                     若无法开启，也可以<a class='linkline' href='https://ravelloh.github.io/RSS/rss.xml'>在此处访问RSS</a>，选择对应文章链接阅读
                 </p>
             </noscript>
-            <div class="listprogram" style="--i: 1">
-                <h4><a href="/articles/20190203/">旧文章合集</a></h4>
-                <span class="iconfontmini icon-clock"></span> <time>2019-02-03</time> • <span
-                    class="iconfontmini icon-classification"></span><a class="c" href="/classification/#归档">归档</a><br>
-                <span class="iconfontmini icon-tag"></span> <a class="tag" href="/tag/#建设">建设</a><br>
-            </div>
         </div>
 <ul class="social">
 

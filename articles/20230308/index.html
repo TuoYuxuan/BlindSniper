@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=0;" name="viewport" />
-    <title>龙芯派2K1000 SylixOS RTC设备DS3231驱动实现 | TuoYuxuan’s Blog</title>
+    <title>龙芯派2k1000 SylixOS 使用io模拟iic总线功能实现 | TuoYuxuan’s Blog</title>
     <meta name="keywords" content="T,blog,">
     <meta name="description" content="A Blog by T">
 
@@ -60,18 +60,18 @@
 
             <div class="overlay"></div>
             <div class="article" id="text">
-                <br><br><h2>龙芯派2K1000 SylixOS RTC设备DS3231驱动实现</h2>
-                <span class="iconfontmini icon-clock"></span> 2023-03-07 • <span
+                <br><br><h2>龙芯派2k1000 SylixOS 使用io模拟iic总线功能实现</h2>
+                <span class="iconfontmini icon-clock"></span> 2023-02-28 • <span
                     class="iconfontmini icon-classification"></span>
                 <a class="c" href="../../classification/#SylixOS">SylixOS</a> -<a class="c" href="../classification/#驱动">驱动</a> • 
                 <span class="iconfontmini icon-tag"></span>
-                <a class="tag" href="../tag/#c">C</a><a class="tag" href="../tag/#RTC">RTC</a> • <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
+                <a class="tag" href="../tag/#c">C</a><a class="tag" href="../tag/#GPIO">GPIO</a>
+				<a class="tag" href="../tag/#I2C">I2C</a> • <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
                 <div>
                     <h4><b><em>Menu - 目录列表</em></b></h4>
                     <a class="m" href="#前言">前言</a>
-                    <a class="m" href="#DS3231 设备介绍">DS3231 设备介绍</a>
+                    <a class="m" href="#I2C">I2C总线介绍</a>
                     <a class="m" href="#驱动开发">驱动开发</a>
-                    <a class="m" href="#RTC设备驱动安装">RTC 设备驱动安装</a>
                 </div>
                 <hr>
                 <h4><a name="前言" href="#前言">前言</a></h4>
@@ -474,15 +474,6 @@
 					<span>}</span>
 				</pre>
 				<p>至此完成 RTC 设备 DS3231 驱动开发。</p>
-<!--                <h4><a name="下载" href="#下载">#下载</a></h4>
-                <p>此文章共含2个附件，分别对应 基础版 与 完整版 。</p><br>
-                <p>imgspider.py - 0.73kb <a
-                        href="https://raw.githubusercontent.com/RavelloH/download/main/code/imgspider.py">预览</a> | <a
-                        href="https://ravelloh.github.io/download/code/imgspider.py">下载</a></p>
-                <p>imgspider-pro.py - 1.76kb <a
-                        href="https://raw.githubusercontent.com/RavelloH/download/main/code/imgspider-pro.py">预览</a> |
-                    <a href="https://ravelloh.github.io/download/code/imgspider-pro.py">下载</a>
-                </p> -->
 
                 <hr>
                 <br>

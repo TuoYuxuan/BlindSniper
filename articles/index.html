@@ -165,42 +165,7 @@
         <div class="text title" id="text">
             <h3>Articles / 文章</h3>
             <br>
-            <div class='searchbox'>
-                <form class="searchbox" onSubmit="return check();" autocomplete="off">
-                    <input type="text" placeholder="从所有文章内检索..." name="search" oninput="searchtext()" onpropertychange="searchtext()">
-                    <button type="button" id='searchbutton'><span class="iconfontmini icon-search"></span></button>
-                    <div class="resultlist" id="resultlist">
-                        <i>- 搜索 -</i><hr><p align="center">
-                            输入关键词以在文章标题及正文中查询
-                        </p>
-                        <hr><a href="https://github.com/ravelloh/RPageSearch">Search powered by RavelloH's RPageSearch</a>
-                    </div>
-                </form>
-            </div>
-            <div id='info'>
-                <span id="jumping">此页面内容需要使用JavaScript</span>
-                <script type="text/javascript">
-                    var jumping = document.getElementById("jumping");
-                    function show_runtime() {
-                        X = new Date("02/28/2023 00:00:00"); //设定时间(月\日\年 时:分:秒))
-                        Y = new Date(); //获取当前时间
-                        T = (Y.getTime() - X.getTime());
-                        M = 24 * 60 * 60 * 1000;
-                        a = T / M;
-                        A = Math.floor(a);
-                        b = (a - A) * 24;
-                        B = Math.floor(b);
-                        c = (b - B) * 60;
-                        C = Math.floor((b - B) * 60);
-                        D = Math.floor((c - C) * 60);
-                        jumping.innerHTML = "<br>记录并索引所有文章。<br><span id='jum' >Loading...</span><br>"
-                        textcache = "最近更新于" + A + "天前。"
-
-                    }
-                    show_runtime();
-                </script>
-            </div>
-
+			<h4>工作和技术总结文章</h4>
         </div>
 
         <div class="text listline" id="text">
@@ -212,58 +177,58 @@
                     若无法开启，也可以<a class='linkline' href='https://tuoyuxuan.github.io/RSS/rss.xml'>在此处访问RSS</a>，选择对应文章链接阅读
                 </p>
             </noscript>
-            <div class="listprogram" style="--i: 7">
+			<div class="listprogram" style="--i: 7">
+			    <h4><a href="../articles/20230309/">GD32F407 MS-RTOS适配总结</a></h4>
+			    <span class="iconfontmini icon-clock"></span> <time>2023-03-09</time> • <span
+			        class="iconfontmini icon-classification"></span><a class="c" href="../classification/#MS-RTOS">MS-RTOS</a>-<a class="c" href="../classification/#驱动">驱动</a>-
+					<a class="c" href="../classification/#bsp">bsp</a><br>
+			    <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#c">c</a><a class="tag" href="../tag/#CAN">CAN</a>
+				<a class="tag" href="../tag/#GPIO">GPIO</a><a class="tag" href="../tag/#ADC">ADC</a><br>
+			    <hr>
+			</div>
+			<div class="listprogram" style="--i: 6">
+			    <h4><a href="../articles/20230308/">龙芯派2k1000 SylixOS 使用io模拟iic总线功能实现</a></h4>
+			    <span class="iconfontmini icon-clock"></span> <time>2023-03-08</time> • <span
+			        class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#驱动">驱动</a><br>
+			    <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#c">C</a><a class="tag" href="../tag/#GPIO">GPIO</a>
+				<a class="tag" href="../tag/#I2C">I2C</a><br>
+			    <hr>
+			</div>
+            <div class="listprogram" style="--i: 5">
                 <h4><a href="../articles/20230307/">龙芯派2K1000 SylixOS RTC设备DS3231驱动实现</a></h4>
                 <span class="iconfontmini icon-clock"></span> <time>2023-03-07</time> • <span
                     class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#驱动">驱动</a><br>
                 <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#c">C</a><a class="tag" href="../tag/#RTC">RTC</a><br>
                 <hr>
             </div>
-            <div class="listprogram" style="--i: 6">
-                <h4><a href="../articles/20230227/">龙芯派2k1000 SylixOS 使用io模拟iic总线功能实现</a></h4>
-                <span class="iconfontmini icon-clock"></span> <time>2023-02-27</time> • <span
-                    class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#驱动">驱动</a><br>
-                <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#c">C</a><a class="tag" href="../tag/#GPIO">GPIO</a>
-				<a class="tag" href="../tag/#I2C">I2C</a><br>
-                <hr>
-            </div>
-            <div class="listprogram" style="--i: 5">
-                <h4><a href="../articles/20230226/">GD32F407 MS-RTOS适配总结</a></h4>
-                <span class="iconfontmini icon-clock"></span> <time>2023-02-26</time> • <span
-                    class="iconfontmini icon-classification"></span><a class="c" href="../classification/#MS-RTOS">MS-RTOS</a>-<a class="c" href="../classification/#驱动">驱动</a>-
-					<a class="c" href="../classification/#bsp">bsp</a><br>
-                <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#c">c</a><a class="tag" href="../tag/#CAN">CAN</a>
-				<a class="tag" href="../tag/#GPIO">GPIO</a><a class="tag" href="../tag/#ADC">ADC</a><br>
-                <hr>
-            </div>
-            <div class="listprogram" style="--i: 4">
-                <h4><a href="../articles/20230225/">SylixOS 不同版本QT程序通过VNC显示</a></h4>
-                <span class="iconfontmini icon-clock"></span> <time>2023-02-25</time> • <span
-                    class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#QT">QT</a><br>
-                <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#C++">C++</a><a class="tag" href="../tag/#VNC">VNC</a><br>
-                <hr>
-            </div>
+			<div class="listprogram" style="--i: 4">
+			    <h4><a href="../articles/20230226/">YEGCloud SylixOS安装方法</a></h4>
+			    <span class="iconfontmini icon-clock"></span> <time>2023-02-26</time> • <span
+			        class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#Cloud">云</a><br>
+			    <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#CMD">Cmd</a><br>
+			    <hr>
+			</div>
             <div class="listprogram" style="--i: 3">
-                <h4><a href="../articles/20230224/">JLINK 连线方式以及 cmd 命令小记</a></h4>
+                <h4><a href="../articles/20230224/">JLINK 连线方式以及 cmd 命令</a></h4>
                 <span class="iconfontmini icon-clock"></span> <time>2023-02-24</time> • <span
                     class="iconfontmini icon-classification"></span><a class="c" href="../classification/#J-Link">J-Link</a><br>
                 <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#CMD">Cmd</a><br>
                 <hr>
             </div>
             <div class="listprogram" style="--i: 2">
-                <h4><a href="../articles/20230223/">YEGCloud SylixOS安装方法</a></h4>
+                <h4><a href="../articles/20230223/">SylixOS QT应用字体显示问题排查</a></h4>
                 <span class="iconfontmini icon-clock"></span> <time>2023-02-23</time> • <span
-                    class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#Cloud">云</a><br>
-                <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#CMD">Cmd</a><br>
-                <hr>
-            </div>
-            <div class="listprogram" style="--i: 1">
-                <h4><a href="../articles/20230222/">SylixOS QT应用字体显示问题排查</a></h4>
-                <span class="iconfontmini icon-clock"></span> <time>2023-02-22</time> • <span
                     class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#QT">QT</a><br>
                 <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#C++">C++</a><br>
                 <hr>
             </div>
+			<div class="listprogram" style="--i: 1">
+			    <h4><a href="../articles/20230222/">SylixOS 不同版本QT程序通过VNC显示</a></h4>
+			    <span class="iconfontmini icon-clock"></span> <time>2023-02-22</time> • <span
+			        class="iconfontmini icon-classification"></span><a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#QT">QT</a><br>
+			    <span class="iconfontmini icon-tag"></span> <a class="tag" href="../tag/#C++">C++</a><a class="tag" href="../tag/#VNC">VNC</a><br>
+			    <hr>
+			</div>
         </div>
 <ul class="social">
 
