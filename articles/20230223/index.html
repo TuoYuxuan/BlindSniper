@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=0;" name="viewport" />
-    <title>SylixOS 不同版本QT程序通过VNC显示 | TuoYuxuan’s Blog</title>
+    <title>SylixOS QT应用字体显示问题排查 | TuoYuxuan’s Blog</title>
     <meta name="keywords" content="T,blog,">
     <meta name="description" content="A Blog by T">
 
@@ -63,19 +63,15 @@
 
             <div class="overlay"></div>
             <div class="article" id="text">
-                <h2>SylixOS 不同版本QT程序通过VNC显示</h2>
-                <span class="iconfontmini icon-clock"></span> 2022-02-22 • <span
+                <h2>SylixOS QT应用字体显示问题排查</h2>
+                <span class="iconfontmini icon-clock"></span> 2022-02-23 • <span
                     class="iconfontmini icon-classification"></span>
                 <a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#QT">QT</a> • 
-                <span class="iconfontmini icon-tag"></span>
-                <a class="tag" href="../tag/#C++">C++</a>
-                <a class="tag" href="../tag/#VNC">VNC</a> • <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
+                <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
                 <div>
                     <h4><b><em>Menu - 目录列表</em></b></h4>
-                    <a class="m" href="#前言">前言</a>
-                    <a class="m" href="#QT4">QT4</a>
-                    <a class="m" href="#QT5">QT5</a>
-                    <a class="m" href="#扩展知识">扩展知识</a>
+                    <a class="m" href="#问题描述">问题描述</a>
+                    <a class="m" href="#解决方法">解决方法</a>
                 </div>
                 <hr>
                 <br><br>
@@ -84,36 +80,26 @@
                     </em>
                 </div>
                 <br>
-                <h4><a name="前言" href="#前言">#前言</a></h4>
+                <h4><a name="问题描述" href="#问题描述">#问题描述</a></h4>
                 <p>
-                    在22年的支持工作中，遇到了SylixOS x64服务器无法识别 USB 设备的情况。为尽快满足客户使用需求，建议客户使用 VNC 调试运行 QT 应用。<br>
-                    这里对具体方法进行记录。<br>
+                    在22年的支持工作中，遇到了SylixOS 运行QT应用时有字库加载失败的情况。<br>
+					<img class="img" id="img1" src="img1.jpg"><br>
+                    在此记录解决方法。<br>
                 </p>
                 <br>
-                <h4><a name="QT4" href="#QT4">#QT4</a></h4>
-				<p>VNC显示：<br>
-				&emsp;&emsp;1.确认应用程序可以正常运行;<br>
-				&emsp;&emsp;2.在SylixOS下设置环境变量QWS_DISPLAY并保存;具体操作步骤如下：<br>
-				      &emsp;&emsp;&emsp;&emsp; a.通过shell界面，env命令查看环境变量；<br>
-				       &emsp;&emsp;&emsp;&emsp;b.设置环境变量QWS_DISPLAY，例如：QWS_DISPLAY=VNC:sylixosfb:/dev/fb0;<br>
-				       &emsp;&emsp;&emsp;&emsp;c.通过命令varsave保存环境变量。<br>
-				&emsp;&emsp;3.再次运行QT4应用即可通过VNC显示。</p>
-                <p> 分辨率修改：可以通过修改系统内meun.lst来设置QT应用显示的分辨率。(QT5分辨率也可通过此方式修改)<br>
-                    meun.lst文件内容如下：<br>
-                    修改如图所示位置为需设置的分辨率，reboot后运行应用即可完成分辨率修改。<br>
-                </p>
-                <img class="img" id="img1" src="img1.jpg">
-                <h4><a name="QT5" href="#QT5">#QT5</a></h4>
-                <p>
-                    VNC显示以及分辨率修改：<br>
-					&emsp;&emsp;1.确认应用程序可以正常运行；<br>
-					&emsp;&emsp;2.在RealEvo-QtSylixOS开发工具中，点击左侧项目->点击构建与运行->选择构建所用的构建套件->点击所选套件下的运行进行配置；
-                <img class="img" id="img2" src="img2.jpg">
-				&emsp;&emsp;3.在参数栏中输入参数-platform VNC:size=1280x800以设置VNC显示以及分辨率。<br>
-				&emsp;&emsp;4.构建运行应用程序即完成设置。
+                <h4><a name="解决方法" href="#解决方法">#解决方法</a></h4>
+				<p>1.在 SylixOS Shell界面输入env命令，查看环境变量。<br>
+				<pre>
+					<span># 关心以下俩个环境变量是否正确</span>
+					<span>QT_QPA_FONTDIR=/qt/lib/fonts</span>
+					<span>QT_QWS_FONTDIR=/qt/lib/fonts</span>
+				</pre>
+				2.切换到/qt/libs/fonts下查看是否存在字体文件DejaVuSans.ttf。<br>
+				3.在环境变量正确以及字体文件存在的情况下可以尝试更换字体文件来解决此问题。<br>
+				注意字体文件需要改名为DejaVuSans.ttf。<br>
+				4.更换后设置环境变量，重新运行应用。<br>
+				5.如仍然未解决，重新部署QT共享库以及应用依赖的相关库，运行应用即可解决此问题。<br>
 				</p>
-                <h4><a name="扩展知识" href="#扩展知识">#扩展知识</a></h4>
-				<p>vnc应用程序在Qt安装目录下\qtcreator-3.4.0\SylixOS\tools</p>
                 <span class="iconfontmini icon-aboutcircle"></span> 原创内容使用 知识共享 署名-非商业性使用-相同方式共享 4.0 (CC BY-NC-ND 4.0)
                 协议授权。
 
@@ -152,7 +138,7 @@
         <script>
             var img = [];
             var flag = 0;
-            var mulitImg = ['img1.jpg','img2.jpg'];
+            var mulitImg = ['img1.jpg'];
             var imgTotal = mulitImg.length;  //图片总数
             for (var i = 0; i < imgTotal; i++) {
                 document.getElementById("loadingtext").innerHTML = "*文章插图加载中:"+flag+"/"+imgTotal;

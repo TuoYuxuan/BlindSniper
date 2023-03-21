@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=0;" name="viewport" />
-    <title>龙芯派2k1000 SylixOS 使用io模拟iic总线功能实现 | TuoYuxuan’s Blog</title>
+    <title>YEGCloud SylixOS安装方法 | TuoYuxuan’s Blog</title>
     <meta name="keywords" content="T,blog,">
     <meta name="description" content="A Blog by T">
 
@@ -15,6 +15,9 @@
     <link rel="manifest" href="../../site.webmanifest">
     <link rel="icon" href="../../favicon.ico">
 
+
+
+    
 </head>
 
 <body>
@@ -60,423 +63,72 @@
 
             <div class="overlay"></div>
             <div class="article" id="text">
-                <br><br><h2>龙芯派2k1000 SylixOS 使用io模拟iic总线功能实现</h2>
-                <span class="iconfontmini icon-clock"></span> 2023-02-28 • <span
+                <h2>YEGCloud SylixOS安装方法</h2>
+                <span class="iconfontmini icon-clock"></span> 2022-02-22 • <span
                     class="iconfontmini icon-classification"></span>
-                <a class="c" href="../../classification/#SylixOS">SylixOS</a> -<a class="c" href="../classification/#驱动">驱动</a> • 
+                <a class="c" href="../classification/#SylixOS">SylixOS</a>-<a class="c" href="../classification/#QT">QT</a> • 
                 <span class="iconfontmini icon-tag"></span>
-                <a class="tag" href="../tag/#c">C</a><a class="tag" href="../tag/#GPIO">GPIO</a>
-				<a class="tag" href="../tag/#I2C">I2C</a> • <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
+                <a class="tag" href="../tag/#C++">C++</a>
+                <a class="tag" href="../tag/#VNC">VNC</a> • <span class="iconfontmini icon-friend"></span> <span id="twikoo_visitors"></span>
                 <div>
                     <h4><b><em>Menu - 目录列表</em></b></h4>
                     <a class="m" href="#前言">前言</a>
-                    <a class="m" href="#I2C">I2C总线介绍</a>
-                    <a class="m" href="#驱动开发">驱动开发</a>
+                    <a class="m" href="#方法">方法</a>
                 </div>
                 <hr>
-                <h4><a name="前言" href="#前言">前言</a></h4>
+                <br><br>
+                <div class="center info"><em>
+                        <span id="loadingtext"></span>
+                    </em>
+                </div>
+                <br>
+                <h4><a name="前言" href="#前言">#前言</a></h4>
                 <p>
-                    在我2022年进入翼辉时第一个任务是需要在龙芯派2K1000 SylixOS 上进行了 DS3231 RTC 设备驱动开发。<br>
-                    本篇文章针对这部分的内容进行总结记录。
+                    在工作中客户使用的云方案为YEGCloud，在YGECloud中无法直接通过bin文件或者ELF文件来固化 SylixOS 镜像。<br>
+                    最终通过安装 VMware 版本 SylixOS 来解决这个问题，这里对具体方法进行记录。<br>
                 </p>
                 <br>
-                <h4><a name="DS3231 设备介绍" href="#DS3231 设备介绍">DS3231 设备介绍</a></h4>
-                <p>
-                    DS3231是一种低成本，极其精确的I2C实时时钟(RTC)与集成温度补偿晶体振荡器(TCXO)和晶体。该设备包含一个电池输入，并保持准确的时间，当设备的主电源中断。
-					晶体谐振器的集成提高了设备的长期精度，并减少了生产线中的零件数量。RTC维护秒、分钟、小时、日、日、月和年信息。
-					月末的日期在少于31天的月份中自动调整，包括闰年的修正。此时钟采用24小时或12小时制，并附有上午/下午指示。提供两个可编程的一天时间报警和一个可编程的方波输出。
-					地址和数据通过I2C双向总线串行传输。<br><br>
-                    关于DS3231各个寄存器信息如下：
-                </p>
+                <h4><a name="方法" href="#方法">#方法</a></h4>
+				<p>1.将SylixOS传到服务器解压SylixOS VMware版，找到其中的 x86_boot.vmdk, x86_main.vmdk<br>
+				2.将这两个文件上传到服务器，使用qemu-img命令将vmdk虚拟机磁盘转为qcow2格式<br>
 				<pre>
-					<span>/*********************************************************************************************************</span>
-					<span> DS3231寄存器地址</span>
-					<span>*********************************************************************************************************/</span>
-					<span>#define DS3231_ADDR           (0b1101000)</span>
-					<span>#define DS3231_I2C_NAME       ("/bus/i2c/0")</span>
-					<span>#define DS3231_DEV_NAME       ("/dev/ds3231")</span>
-					<span>#define rSEC                  (0x00)                                    /*  Second                      */</span>
-					<span>#define rHOUR                 (0x02)                                    /*  Hour                        */</span>
-					<span>#define rMIN                  (0x01)                                    /*  Minute                      */</span>
-					<span>#define rDAY                  (0x03)                                    /*  Day                         */</span>
-					<span>#define rDATE                 (0x04)                                    /*  Date                        */</span>
-					<span>#define rMONCENTURY           (0x05)                                    /*  Month/century               */</span>
-					<span>#define rYEAR                 (0x06)                                    /*  Year                        */</span>
-					<span>#define rALM1SEC              (0x07)                                    /*  Alarm1 second               */</span>
-					<span>#define rALM1MIN              (0x08)                                    /*  Alarm1 minute               */</span>
-					<span>#define rALM1HOUR             (0x09)                                    /*  Alarm1 hour                 */</span>
-					<span>#define rALM1DAYDATE          (0x0A)                                    /*  Alarm1 day&date             */</span>
-					<span>#define rALM2MIN              (0x0B)                                    /*  Alarm2 minute               */</span>
-					<span>#define rALM2HOUR             (0x0C)                                    /*  Alarm2 hour                 */</span>
-					<span>#define rALM2DAYDATE          (0x0D)                                    /*  Alarm2 day&date             */</span>
-					<span>#define rCON                  (0x0E)                                    /*  Control                     */</span>
-					<span>#define rSTATUS               (0x0F)                                    /*  Control/Status              */</span>
-					<span>#define rAGING                (0x10)                                    /*  Aging Offse                 */</span>
-					<span>#define rTEMP1                (0x11)                                    /*  MSB of Temp                 */</span>
-					<span>#define rTEMP2                (0x12)                                    /*  LSB of Temp                 */</span>
-				    </pre>
-				<br>
-                <h4><a name="驱动开发" href="#驱动开发">驱动开发</a></h4>
-                <p>
-                    DS3231 的数据传输依赖于 I2C 总线，对于其设备结构体定义如下：
-                </p>
-                <pre>
-					<span>/*********************************************************************************************************</span>
-					<span> DS3231 设备结构</span>
-					<span>*********************************************************************************************************/</span>
-					<span>typedef struct ds3231 {</span>
-					<span>    LW_DEV_HDR            ds_devhdr;</span>
-					<span>    PLW_I2C_DEVICE        ds_i2cdev;                                    /* I2C 设备                       */</span>
-					<span>    UINT8                 ds_ucChildAddr;                               /* DS3231 设备子地址              */</span>
-					<span>    time_t                ds_timeCreate;                                /* 设备创建时间                   */</span>
-					<span>    INT                   ds_iCmdWord;                                  /* 命令                           */</span>
-					<span>} DS3231;</span>
-                </pre>
-                <p>其中 PLW_I2C_DEVICE 为 SylixOS 对于 I2C 设备的抽象。其中包括了设备地址，读写标志，所挂载的设配器等信息。
-				<br><br>对于 DS3231 对于设备的驱动首先需要读写相关寄存器数据，然后根据读写后的数据进行时间格式转换以完成相关功能的实现。
-				SylixOS 对于 I2C 消息的设备地址，读写标志，数据缓冲区等相关结构信息封装为LW_I2C_MESSAGE结构体，DS3231 以8位 BCD 码存取数据。</p>
-				<h5>写入寄存器</h5>
-				<p>设置缓冲区，填入需要写入寄存器地址以及写入内容，设置 I2C 消息结构。调用API_I2cDeviceTransfer以写入寄存器。</p>
-                <pre>
-					<span>/*********************************************************************************************************</span>
-					<span> ** 函数名称: __DS3231SetReg</span>
-					<span> ** 功能描述: 写入 DS3231 寄存器</span>
-					<span> ** 输　入  : pi2cdev            设备结构体</span>
-					<span> **          ucRegAddr          寄存器地址</span>
-					<span> **          ucData             数据</span>
-					<span> ** 输　出  : 操作的 pi2cmsg 数量, 错误返回 -1</span>
-					<span> ** 全局变量:</span>
-					<span> ** 调用模块:</span>
-					<span>*********************************************************************************************************/</span>
-					<span>static INT  __DS3231SetReg (PLW_I2C_DEVICE  pi2cdev, UINT8  ucRegAddr, UINT8  ucData)</span>
-					<span>{</span>
-					<span>    INT    iRet;</span>
-					<span>    UINT8  pucRxBuf[2];</span>
-					<span></span>
-					<span>    if (!pi2cdev) {</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    pucRxBuf[0] = ucRegAddr;</span>
-					<span>    pucRxBuf[1] = ucData;</span>
-					<span>    LW_I2C_MESSAGE msgs[] = {</span>
-					<span>            {</span>
-					<span>                    .I2CMSG_usAddr = pi2cdev->I2CDEV_usAddr,</span>
-					<span>                    .I2CMSG_usFlag = 0,</span>
-					<span>                    .I2CMSG_usLen = 2,</span>
-					<span>                    .I2CMSG_pucBuffer = pucRxBuf,</span>
-					<span>            }</span>
-					<span>    };</span>
-					<span></span>
-					<span>    iRet = API_I2cDeviceTransfer(pi2cdev, msgs, 1);</span>
-					<span>    if (iRet < 0) {</span>
-					<span>        printk("write wrong %d",iRet);</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    return  (iRet - 1);</span>
-					<span>}</span>
-                </pre>
-				<h5>读取寄存器</h5>
-				<p>读取DS3231各个寄存器相比较于写入。需要先写入需要读取的寄存器地址，之后再进行读取操作。这就需要俩个 I2C 消息来实现。</p>
-                <pre>
-                    <span>/*********************************************************************************************************</span>
-                    <span>** 函数名称: __DS3231GetReg</span>
-                    <span>** 功能描述: 读取 DS3231 寄存器</span>
-                    <span>** 输　入  : pi2cdev            设备结构体</span>
-                    <span>**          ucRegAddr          寄存器地址</span>
-                    <span>**          pucData            数据</span>
-                    <span>** 输　出  : 操作的 pi2cmsg 数量, 错误返回 -1</span>
-                    <span>** 全局变量:</span>
-                    <span>** 调用模块:</span>
-                    <span>*********************************************************************************************************/</span>
-                    <span>static INT  __DS3231GetReg (PLW_I2C_DEVICE  pi2cdev, UINT8  ucRegAddr, UINT8  *pucData)</span>
-                    <span>{</span>
-                    <span>    INT  iRet;</span>
-                    <span></span>
-                    <span>    if (!pi2cdev) {</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    LW_I2C_MESSAGE msgs[] = {</span>
-                    <span>            {</span>
-                    <span>                    .I2CMSG_usAddr = pi2cdev->I2CDEV_usAddr,</span>
-                    <span>                    .I2CMSG_usFlag = 0,</span>
-                    <span>                    .I2CMSG_usLen  = 1,</span>
-                    <span>                    .I2CMSG_pucBuffer = &ucRegAddr,</span>
-                    <span>            },{</span>
-                    <span>                    .I2CMSG_usAddr = pi2cdev->I2CDEV_usAddr,</span>
-                    <span>                    .I2CMSG_usFlag = LW_I2C_M_RD,</span>
-                    <span>                    .I2CMSG_usLen  = 1,</span>
-                    <span>                    .I2CMSG_pucBuffer = pucData,</span>
-                    <span>            }</span>
-                    <span>    };</span>
-                    <span></span>
-                    <span>    iRet = API_I2cDeviceTransfer(pi2cdev,msgs,2);</span>
-                    <span>    if (iRet < 0) {</span>
-                    <span>        printk("read wrong%d",iRet);</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    } </span>
-                    <span>    return  (iRet - 1);</span>
-                    <span>}</span>
-                    </pre>
-				<h5>时间格式转换</h5>
-				<p>在读取出8位BCD码后，需要进行时间格式转化。将读出的数据按照DS3231手册内容进行转换填入时间相关结构体tm中，最后转换为time_t格式放入读取缓冲区。</p>
-                <pre>
-                    <span>/*********************************************************************************************************</span>
-                    <span>** 函数名称: __DS3231GetTime</span>
-                    <span>** 功能描述: 获取 RTC 时间</span>
-                    <span>** 输　入  : prtcfuncs          时间操作函数集</span>
-                    <span>**          pds3231            设备</span>
-                    <span>**          ptimeNow           时间</span>
-                    <span>** 输　出  : PX_ERROR OR ERROR_NONE</span>
-                    <span>** 全局变量:</span>
-                    <span>** 调用模块:</span>
-                    <span>*********************************************************************************************************/</span>
-                    <span>static INT  __DS3231GetTime (PLW_RTC_FUNCS  prtcfuncs, DS3231  *pds3231, time_t  *ptimeNow)</span>
-                    <span>{</span>
-                    <span>    struct tm  tmNow;</span>
-                    <span>    UINT8      pvBuf;</span>
-                    <span>    INT        iLen = 0;</span>
-                    <span>    INT        iHigh;                                                   /*  BCD 码高位                  */</span>
-                    <span>    INT        iLow;                                                    /*  BCD 码低位                  */</span>
-                    <span></span>
-                    <span>    pds3231->ds_ucChildAddr = rSEC;</span>
-                    <span>    iLen                    = __DS3231GetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr, &pvBuf);</span>
-                    <span>    iHigh                   = ((pvBuf & 0xF0) >> 4);</span>
-                    <span>    iLow                    =  (pvBuf & 0x0F);</span>
-                    <span>    tmNow.tm_sec            = (unsigned char)(iHigh * 10 + iLow);</span>
-                    <span>    pvBuf                   =0;</span>
-                    <span>    if (iLen < 0) {</span>
-                    <span>        printk("read wrong");</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    pds3231->ds_ucChildAddr = rMIN;</span>
-                    <span>    iLen                    = __DS3231GetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr, &pvBuf);</span>
-                    <span>    iHigh                   = ((pvBuf & 0xF0) >> 4);</span>
-                    <span>    iLow                    =  (pvBuf & 0x0F);</span>
-                    <span>    tmNow.tm_min            = (unsigned char)(iHigh * 10 + iLow);</span>
-                    <span>    pvBuf                   =0;</span>
-                    <span>    if (iLen < 0) {</span>
-                    <span>        printk("read wrong");</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    pds3231->ds_ucChildAddr = rHOUR;</span>
-                    <span>    iLen                    = __DS3231GetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr, &pvBuf);</span>
-                    <span>    if (pvBuf & 0x10){</span>
-                    <span>        pvBuf         &= 0x3f;</span>
-                    <span>        iHigh         = ((pvBuf & 0xF0) >> 4);</span>
-                    <span>        iLow          =  (pvBuf & 0x0F);</span>
-                    <span>        tmNow.tm_hour = (unsigned char)(iHigh * 10 + iLow);</span>
-                    <span>    }</span>
-                    <span>    pvBuf =0;</span>
-                    <span>    if (iLen < 0) {</span>
-                    <span>        printk("read wrong");</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    pds3231->ds_ucChildAddr = rDATE;</span>
-                    <span>    iLen                    = __DS3231GetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr, &pvBuf);</span>
-                    <span>    iHigh                   = ((pvBuf & 0xF0) >> 4);</span>
-                    <span>    iLow                    =  (pvBuf & 0x0F);</span>
-                    <span>    tmNow.tm_mday           = (unsigned char)(iHigh * 10 + iLow);</span>
-                    <span>    pvBuf                   = 0;</span>
-                    <span>    if (iLen < 0) {</span>
-                    <span>        printk("read wrong");</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    pds3231->ds_ucChildAddr = rMONCENTURY;</span>
-                    <span>    iLen                    = __DS3231GetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr, &pvBuf);</span>
-                    <span>    if (pvBuf & 0x10){</span>
-                    <span>    pvBuf        &= 0x1f;</span>
-                    <span>    iHigh        = ((pvBuf & 0xF0) >> 4);</span>
-                    <span>    iLow         =  (pvBuf & 0x0F);</span>
-                    <span>    tmNow.tm_mon = (unsigned char)(iHigh * 10 + iLow);</span>
-                    <span>    }</span>
-                    <span>    pvBuf =0;</span>
-                    <span>    if (iLen < 0) {</span>
-                    <span>        printk("read wrong");</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    pds3231->ds_ucChildAddr = rYEAR;</span>
-                    <span>    iLen                    = __DS3231GetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr, &pvBuf);</span>
-                    <span>    iHigh                   = ((pvBuf & 0xF0) >> 4);</span>
-                    <span>    iLow                    =  (pvBuf & 0x0F);</span>
-                    <span>    tmNow.tm_year           = (unsigned char)(iHigh * 10 + iLow + 2000);</span>
-                    <span>    pvBuf                   = 0;</span>
-                    <span>    if (iLen < 0) {</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>        printk("read wrong");</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    pds3231->ds_ucChildAddr = rDAY;</span>
-                    <span>    iLen                    = __DS3231GetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr, &pvBuf);</span>
-                    <span>    tmNow.tm_wday           = (unsigned char)(pvBuf);</span>
-                    <span>    if (iLen < 0) {</span>
-                    <span>        printk("read wrong");</span>
-                    <span>        return  (PX_ERROR);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    if (ptimeNow) {</span>
-                    <span>        *ptimeNow = timegm(&tmNow);</span>
-                    <span>    }</span>
-                    <span></span>
-                    <span>    return  (ERROR_NONE);</span>
-                    <span>}</span>
-                    </pre>
-                <p>写入时将 time_t 类型数据转换为 tm 格式，然后根据寄存器进行转化写入相应寄存器当中。
-                </p>
-                <pre>
-					<span>/*********************************************************************************************************</span>
-					<span>** 函数名称: __DS3231SetTime</span>
-					<span>** 功能描述: 设置 RTC 时间</span>
-					<span>** 输　入  : prtcfuncs          时间操作函数集</span>
-					<span>**          pds3231            设备</span>
-					<span>**          ptimeNow           时间</span>
-					<span>** 输　出  : PX_ERROR OR ERROR_NONE</span>
-					<span>** 全局变量:</span>
-					<span>** 调用模块:</span>
-					<span>*********************************************************************************************************/</span>
-					<span>static INT  __DS3231SetTime (PLW_RTC_FUNCS  prtcfuncs, DS3231  *pds3231, time_t  *ptimeNow)</span>
-					<span>{</span>
-					<span>    struct tm  tmNow;</span>
-					<span>    UINT8      pvBuf;</span>
-					<span>    INT        iHigh;                                                   /*  BCD 码高位                  */</span>
-					<span>    INT        iLen;</span>
-					<span>    INT        iLow;                                                    /*  BCD 码低位                  */</span>
-					<span></span>
-					<span>    if (!pds3231) {</span>
-					<span>        _ErrorHandle(EINVAL);</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    gmtime_r(ptimeNow, &tmNow);                                         /*  转换成 tm 时间格式          */</span>
-					<span></span>
-					<span>    iHigh                   = tmNow.tm_sec / 10;</span>
-					<span>    iLow                    = tmNow.tm_sec % 10;</span>
-					<span>    pvBuf                   = (unsigned char)((iHigh << 4) + iLow);     /*  秒寄存器                    */</span>
-					<span>    pds3231->ds_ucChildAddr = rSEC;</span>
-					<span>    iLen                    = __DS3231SetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr,pvBuf);</span>
-					<span>    if (iLen){</span>
-					<span>        printk("write wrong");</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    iHigh                   = tmNow.tm_min / 10;</span>
-					<span>    iLow                    = tmNow.tm_min % 10;</span>
-					<span>    pvBuf                   = (unsigned char)((iHigh << 4) + iLow);     /*  分寄存器                    */</span>
-					<span>    pds3231->ds_ucChildAddr = rMIN;</span>
-					<span>    iLen                    = __DS3231SetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr,pvBuf);</span>
-					<span>    if (iLen){</span>
-					<span>        printk("write wrong");</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    iHigh                   = tmNow.tm_hour / 10;</span>
-					<span>    iLow                    = tmNow.tm_hour % 10;</span>
-					<span>    pvBuf                   = (unsigned char)((iHigh << 4) + iLow);     /*      小时寄存器                  */</span>
-					<span>    pds3231->ds_ucChildAddr = rHOUR;</span>
-					<span>    iLen                    = __DS3231SetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr,pvBuf);</span>
-					<span>    if (iLen){</span>
-					<span>        printk("write wrong");</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    iHigh                   = tmNow.tm_mday / 10;</span>
-					<span>    iLow                    = tmNow.tm_mday % 10;</span>
-					<span>    pvBuf                   = (unsigned char)((iHigh << 4) + iLow);     /*  日期寄存器                  */</span>
-					<span>    pds3231->ds_ucChildAddr = rDATE;</span>
-					<span>    iLen                    = __DS3231SetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr,pvBuf);</span>
-					<span>    if (iLen){</span>
-					<span>        printk("write wrong");</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>   }</span>
-					<span></span>
-					<span>    iHigh                   = tmNow.tm_mon / 10;</span>
-					<span>    iLow                    = tmNow.tm_mon % 10;</span>
-					<span>    pvBuf                   = (unsigned char)((iHigh << 4) + iLow);     /*  月份寄存器                  */</span>
-					<span>    pds3231->ds_ucChildAddr = rMONCENTURY;</span>
-					<span>    iLen                    = __DS3231SetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr,pvBuf);</span>
-					<span>    if (iLen){</span>
-					<span>        printk("write wrong");</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    iHigh                   = (tmNow.tm_year - 2000) / 10;</span>
-					<span>    iLow                    = (tmNow.tm_year - 2000) % 10;</span>
-					<span>    pvBuf                   = (unsigned char)((iHigh << 4) + iLow);     /*  年寄存器                  */</span>
-					<span>    pds3231->ds_ucChildAddr = rYEAR;</span>
-					<span>    iLen                    = __DS3231SetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr,pvBuf);</span>
-					<span>    if (iLen){</span>
-					<span>        printk("write wrong");</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    pvBuf                   = (unsigned char)(tmNow.tm_wday);           /*  日期寄存器                  */</span>
-					<span>    pds3231->ds_ucChildAddr = rDAY;</span>
-					<span>    iLen                    = __DS3231SetReg(pds3231->ds_i2cdev,pds3231->ds_ucChildAddr,pvBuf);</span>
-					<span>    if (iLen){</span>
-					<span>        printk("write wrong");</span>
-					<span>        return  (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    return  (ERROR_NONE);</span>
-					<span>}</span>
-                    </pre>
-                <h4><a name="RTC设备驱动安装" href="#RTC设备驱动安装">RTC 设备驱动安装</a></h4>
-                <p>SylixOS 中设定了 RTC 操作函数集 LW_RTC_FUNCS，将之前实现的函数__DS3231SetTime，__DS3231GetTime 填入操作函数集中。</p>
-                <pre>
-					<span>/*********************************************************************************************************</span>
-					<span>** 函数名称: rtcGetFuncs</span>
-					<span>** 功能描述: RTC 函数操作集获取</span>
-					<span>** 输　入  : VOID</span>
-					<span>** 输　出  : rtcfuncs           RTC 操作函数集</span>
-					<span>** 全局变量:</span>
-					<span>** 调用模块:</span>
-					<span>*********************************************************************************************************/</span>
-					<span>PLW_RTC_FUNCS   rtcGetFuncs (VOID)</span>
-					<span>{</span>
-					<span>    static LW_RTC_FUNCS    rtcfuncs = {LW_NULL, __DS3231SetTime, __DS3231GetTime, LW_NULL};</span>
-					<span></span>
-					<span>    return  (&rtcfuncs);</span>
-					<span>}</span>
-                </pre>
-                <p>以内核模块装载的方式，创建 RTC 设备以及驱动安装。</p>
-				<pre>
-					<span>/*********************************************************************************************************</span>
-					<span> ** 函数名称: module_init</span>
-					<span> ** 功能描述: DS3231 驱动安装</span>
-					<span> ** 输　入  : VOID</span>
-					<span> ** 输　出  : 错误号</span>
-					<span> ** 全局变量:</span>
-					<span> ** 调用模块:</span>
-					<span> *********************************************************************************************************/</span>
-					<span>INT module_init (void)</span>
-					<span>{</span>
-					<span>    INT  iRet;</span>
-					<span>    PLW_RTC_FUNCS   prtcfuncs = rtcGetFuncs();</span>
-					<span></span>
-					<span>    iRet = rtcDrv();</span>
-					<span>    if (iRet != ERROR_NONE) {</span>
-					<span>        return (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    iRet = rtcDevCreate(prtcfuncs);</span>
-					<span>    if (iRet != ERROR_NONE) {</span>
-					<span>        return (PX_ERROR);</span>
-					<span>    }</span>
-					<span></span>
-					<span>    return  (ERROR_NONE);</span>
-					<span>}</span>
+					<span>qemu-img convert -f vmdk -O qcow2 x86_boot.vmdk x86_main.qcow2</span>
+					<span>qemu-img convert -f vmdk -O qcow2 x86_boot.vmdk x86_boot.qcow2</span>
 				</pre>
-				<p>至此完成 RTC 设备 DS3231 驱动开发。</p>
-
-                <hr>
-                <br>
+				3.切换到虚拟化服务器web界面，创建新虚拟机<br>
+				&emsp;&emsp;a.操作系统类型：Linux kernel 2.4，不使用任何光盘介质<br>
+				<img class="img" id="img1" src="img1.jpg"><br>
+				&emsp;&emsp;b.创建IDE硬盘，硬盘大小根据需求选择<br>
+				<img class="img" id="img2" src="img2.jpg"><br>
+				&emsp;&emsp;c.配置CPU，内核数量根据自己需求而定，类型为host <br>
+				<img class="img" id="img3" src="img3.jpg"><br>
+				&emsp;&emsp;d.修改网络模型，如果网卡不可用，尝试修改为其他模型<br>
+				<img class="img" id="img4" src="img4.jpg"><br>
+				4.创建虚拟机的步骤完毕，现在连接到服务器的shell，可以使用web shell或另行连接<br>
+				<pre>
+					<span># 进入到虚拟机配置文件目录</span>
+					<span>cd /etc/pve/qemu-server/</span>
+					<span></span>
+					<span># 编辑刚刚创建的ID为125的虚拟机所属配置文件</span>
+					<span>vim 125.conf</span>
+				</pre>
+				原配置文件如下：<br>
+				<img class="img" id="img5" src="img5.jpg"><br>
+				5.修改第6行ide0开头的内容如下<br>
+				<pre>
+					<span>ide0: nfshare:125/x86_boot.qcow2</span>
+					<span>ide1: nfshare:125/x86_main.qcow2</span>
+					<span></span>
+					<span># 注意！</span>
+					<span># 其中，ide0 ide1务必不要重复，以免冲突</span>
+					<span># 其中，nfshare为我虚拟化服务器所在的存储名称，实际名称以实际为准！</span>
+				</pre>
+				6.修改完毕后，先删除现有的文件，将刚刚转化完毕的两个qcow2文件移动到虚拟机磁盘映像所在目录<br>
+				<img class="img" id="img6" src="img6.jpg"><br>
+				如 /mnt 目录下没有 ID 编号文件，检测根目录下是否有Vmdata文件夹。之后按照同样的方式操作。<br>
+				7.随后打开web界面，启动虚拟机即可！
+				</p>
+                
                 <span class="iconfontmini icon-aboutcircle"></span> 原创内容使用 知识共享 署名-非商业性使用-相同方式共享 4.0 (CC BY-NC-ND 4.0)
                 协议授权。
 
@@ -496,7 +148,7 @@
             </div>
             <ul class="social">
                 <li><a href="/about/"><span class="iconfont icon-about"></span></a></li>
-                <li><a href="http://github.com/tuoyuxuan" target="_blank" rel="noreferrer"><span
+                <li><a href="http://github.com/ravelloh" target="_blank" rel="noreferrer"><span
                             class="iconfont icon-github"></span></a></li>
                 <li>
                     <a href="http://xeocnet-studio.github.io" target="_blank" rel="noreferrer">
@@ -504,7 +156,7 @@
                         </span>
                     </a>
                 </li>
-                <li><a href="https://tuoyuxuan.github.io/RSS/rss.xml" target="_blank"><span class="iconfont2 icon-rss"></span></a></li>
+                <li><a href="https://ravelloh.github.io/RSS/rss.xml" target="_blank"><span class="iconfont2 icon-rss"></span></a></li>
             </ul>
         </section>
         <div class="menu">
@@ -512,10 +164,30 @@
                 <script type="text/javascript" src="../../js/menu.js"></script>
             </ul>
         </div>
+        <script>
+            var img = [];
+            var flag = 0;
+            var mulitImg = ['img1.jpg','img2.jpg','img3.jpg','img4.jpg','img5.jpg','img6.jpg'];
+            var imgTotal = mulitImg.length;  //图片总数
+            for (var i = 0; i < imgTotal; i++) {
+                document.getElementById("loadingtext").innerHTML = "*文章插图加载中:"+flag+"/"+imgTotal;
+                img[i] = new Image()
+                img[i].src = mulitImg[i]
+                img[i].onload = function () {
+                    flag++;
+                    if (flag == imgTotal) {
+                        document.getElementById("loadingtext").innerHTML = "*文章插图加载完成:"+flag+"/"+imgTotal;
+                    } else {
+                        document.getElementById("loadingtext").innerHTML = "*文章插图加载中:"+flag+"/"+imgTotal;
+                        return;
+                    }
+                }
+            }
+        </script>
 
             <!-- JavaScript -->
-	<script src="../../js/script.js"></script>    
-	<script type="text/javascript" src="../../js/common.js"></script>
+<script src="../../js/script.js"></script>    
+<script type="text/javascript" src="../../js/common.js"></script>
     <script src="//instant.page/5.1.1" type="module" integrity="sha384-MWfCL6g1OTGsbSwfuMHc8+8J2u71/LA8dzlIN3ycajckxuZZmF+DNjdm7O6H3PSq"></script>
             
     </body>
