@@ -89,7 +89,7 @@
                 </p>
                 <br>
                 <h4><a name="方法" href="#方法">#方法</a></h4>
-				<p>1.将SylixOS传到服务器解压SylixOS VMware版，找到其中的 x86_boot.vmdk, x86_main.vmdk<br>
+				<p>1.将SylixOS传到服务器解压SylixOS VMware版，找到其中的 x86_boot.vmdk, x86_main.vmdk<br><br>
 				2.将这两个文件上传到服务器，使用qemu-img命令将vmdk虚拟机磁盘转为qcow2格式<br>
 				<pre>
 					<span>qemu-img convert -f vmdk -O qcow2 x86_boot.vmdk x86_main.qcow2</span>
@@ -125,7 +125,7 @@
 				</pre>
 				6.修改完毕后，先删除现有的文件，将刚刚转化完毕的两个qcow2文件移动到虚拟机磁盘映像所在目录<br>
 				<img class="img" id="img6" src="img6.jpg"><br>
-				如 /mnt 目录下没有 ID 编号文件，检测根目录下是否有Vmdata文件夹。之后按照同样的方式操作。<br>
+				如 /mnt 目录下没有 ID 编号文件，检测根目录下是否有Vmdata文件夹。之后按照同样的方式操作。<br><br>
 				7.随后打开web界面，启动虚拟机即可！
 				</p>
                 <hr>

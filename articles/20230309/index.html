@@ -71,7 +71,7 @@
                 <div>
                     <h4><b><em>Menu - 目录列表</em></b></h4>
                     <a class="m" href="#前言">前言</a>
-                    <a class="m" href="#CAN总线丢帧问题">can 总线丢帧问题</a>
+                    <a class="m" href="#CAN总线丢帧问题">CAN 总线丢帧问题</a>
 					<a class="m" href="#ADC功能验证问题">ADC 功能验证问题</a>
                     <a class="m" href="#GPIO中断问题">GPIO 中断问题</a>
                     <a class="m" href="#IO应用问题">IO 应用问题</a>
@@ -85,9 +85,11 @@
                     本篇文章对于在项目中基于GD32F407ZET6适配MS-RTOS遇到的问题进行汇总记录。
                 </p>
                 <br>
-                <h4><a name="can总线丢帧问题" href="#CAN总线丢帧问题">can 总线丢帧问题</a></h4>
+                <h4><a name="CAN总线丢帧问题" href="#CAN总线丢帧问题">CAN 总线丢帧问题</a></h4>
                 <p>
-					在客户板卡上有俩路can，在测试过程中发现不同波特率下均有丢帧的现象<br>
+					CAN（Controller Area Network）总线是一种可以在无主机情况下实现微处理器或者设备之间相互通信的总线标准。<br><br>
+					在 GD32F407ZET6 芯片上 CAN 总线控制器作为 CAN 网络接口，遵循 CAN 总线协议 2.0A 和 2.0B。CAN 总线控制器可以处理总线上的数据收发并具有 28 个过滤器，过滤器用于筛选并接收用户需要的消息。用户可以通过 3 个发送邮箱将待发送数据传输至总线，邮箱发送的顺序由发送调度器决定。并通过 2 个深度为 3 的接收 FIFO 获取总线上的数据，接收 FIFO 的管理完全由硬件控制。同时 CAN 总线控制器硬件支持时间触发通信（Time-trigger communication）功能。<br><br>
+					在驱动实现后，测试过程中发现，标准帧以及扩展帧的情况下，接受均有丢帧的情况发生。<br>
                     <img class="img" id="img1" src="img1.jpg"><br>
 					调试查看测试结果后，发现不同波特率下丢弃的帧，帧ID为固定的值。故怀疑问题出在驱动代码<br>
 					在 MS-RTOS 创建 CAN 设备的函数 gd32_can_dev_create 里发现了对于 CAN 和 CAN 滤波器的配置代码，对照手册后发现，问题出在函数__can_filter_init <br>
@@ -95,6 +97,328 @@
 					在函数__can_filter_init中，对于 CAN 滤波器的掩码模式和列表模式的过滤器数据寄存器值配置有误，应均设置为0 <br>
                     <img class="img" id="img3" src="img3.jpg"><br>
 					修改后测试，CAN 通信再无丢帧现象发生<br>
+				</p>
+				<h4><a name="ADC功能验证问题" href="#ADC功能验证问题">ADC 功能验证问题</a></h4>
+				<p>
+					在GD32F407ZET6芯片上集成了 12 位逐次逼近式模数转换器模块（ADC），可以采样来自于 16 个外部通道和 2 个内部通道和一个电池电压（VBAT）通道的模拟信号。这 19 个 ADC 采样通道都支持多种运行模式，采样转换后，转换结果可以按照最低有效位对齐或最高有效位对齐的方式保存在相应的数据寄存器中。片上的硬件过采样机制可以通过减少来自 MCU 的相关计算负担来提高性能。<br>
+				    ADC 转换的发起可以有硬件和软件两种方式，可以为了验证 ADC 功能正常。在 bsp 中添加了定时器timer0，具体验证过程见下方测试代码。<br>
+					<pre>
+						<span>#include &lt;ms_rtos.h&gt;</span>
+						<span></span>
+						<span>/*</span>
+						<span> * ADC 结构</span>
+						<span> */</span>
+						<span>#define CMD_ADC_CONFIG         _MS_IOW('a', 'a', config_adc_t)          /*  设置 ADC 工作参数           */</span>
+						<span>#define CMD_ADC_SOFT_TRIG      _MS_IO('a', 'b')                         /*  手动启动一次 ADC 转换       */</span>
+						<span>#define CMD_ADC_STOP           _MS_IO('a', 'c')                         /*  暂停转换                    */</span>
+						<span></span>
+						<span>typedef struct config_adc {</span>
+						<span></span>
+						<span>#define ADC_CONV_SEQ_MAX_LENGTH     (16)</span>
+						<span>    ms_uint8_t   conv_seq[ADC_CONV_SEQ_MAX_LENGTH];                     /*  ADC 转换序列                */</span>
+						<span>    ms_uint8_t   conv_length;</span>
+						<span></span>
+						<span>#define ADC_EXTTRIG_SRC_T0_CH0    0U                                    /*  timer 0 CC0 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T0_CH1    1U                                    /*  timer 0 CC1 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T0_CH2    2U                                    /*  timer 0 CC2 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T1_CH1    3U                                    /*  timer 1 CC1 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T1_CH2    4U                                    /*  timer 1 CC2 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T1_CH3    5U                                    /*  timer 1 CC3 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T1_TRGO   6U                                    /*  timer 1 TRGO event select   */</span>
+						<span>#define ADC_EXTTRIG_SRC_T2_CH0    7U                                    /*  timer 2 CC0 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T2_TRGO   8U                                    /*  timer 2 TRGO event select   */</span>
+						<span>#define ADC_EXTTRIG_SRC_T3_CH3    9U                                    /*  timer 3 CC3 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T4_CH0    10U                                   /*  timer 4 CC0 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T4_CH1    11U                                   /*  timer 4 CC1 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T4_CH2    12U                                   /*  timer 4 CC2 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T7_CH0    13U                                   /*  timer 7 CC0 event select    */</span>
+						<span>#define ADC_EXTTRIG_SRC_T7_TRGO   14U                                   /*  timer 7 TRGO event select   */</span>
+						<span>#define ADC_EXTTRIG_SRC_EXTI_11   15U                                   /*  extiline 11 select          */</span>
+						<span>#define ADC_EXTTRIG_SRC_NONE      16U                                   /*  none                        */</span>
+						<span>    ms_uint8_t   exttrig_src;                                           /*  ADC 转换触发源              */</span>
+						<span>} config_adc_t;</span>
+						<span></span>
+						<span>/*</span>
+						<span> * 定时器结构</span>
+						<span> */</span>
+						<span>#define CMD_TIMER_CONFIG               _MS_IOW('t', 'a', config_timer_t)/*  设置定时器工作模式          */</span>
+						<span>#define CMD_TIMER_START                _MS_IO('t', 'b')                 /*  启动定时器                  */</span>
+						<span>#define CMD_TIMER_INT_SET              _MS_IO('t', 'c')                 /*  打开中断                    */</span>
+						<span>#define CMD_TIMER_INT_RESET            _MS_IO('t', 'd')                 /*  关闭中断                    */</span>
+						<span>#define CMD_TIMER_INT_WAIT             _MS_IOW('t', 'e', ms_tick_t)     /*  等待中断                    */</span>
+						<span>#define CMD_TIMER_WAVE_SET             _MS_IOW('t', 'f', config_pwm_t)  /*  设置 Wave 模式              */</span>
+						<span>#define CMD_TIMER_WAVE_SET_FOR_ADC     _MS_IOW('t', 'g', config_pwm_t)  /*  设置 Wave 模式 (for adc)    */</span>
+						<span>#define CMD_TIMER_PWM_CAPTURE          _MS_IOW('t', 'h', config_pwm_capture_t)</span>
+						<span></span>
+						<span>typedef struct config_timer {</span>
+						<span>    ms_uint32_t   intval;                                               /*  自动重装值                  */</span>
+						<span>    ms_uint16_t   psc;                                                  /*  时钟分频数                  */</span>
+						<span>    ms_uint8_t    count_mod;                                            /*  计数模式  up:0  down:1      */</span>
+						<span>} config_timer_t;</span>
+						<span></span>
+						<span>typedef struct config_pwm {</span>
+						<span>   int            polarity;                                            /*  PWM 极性                    */</span>
+						<span>    ms_uint32_t    compare;                                             /*  比较值                      */</span>
+						<span>    ms_uint8_t     pwm_en;                                              /*  PWM 使能                    */</span>
+						<span>    ms_uint8_t     pwm_ch;                                              /*  PWM 通道                    */</span>
+						<span>} config_pwm_t;</span>
+						<span></span>
+						<span>typedef struct config_pwm_for_ad {</span>
+						<span>    int            polarity;                                            /*  PWM 极性                    */</span>
+						<span>    ms_uint32_t    compare;                                             /*  比较值                      */</span>
+						<span>    ms_uint8_t     pwm_en;                                              /*  PWM 使能                    */</span>
+						<span>    ms_uint8_t     pwm_ch;                                              /*  PWM 通道                    */</span>
+						<span></span>
+						<span>#define EVENT_TRIG  0x00</span>
+						<span>#define EVENT_CC1   0x01</span>
+						<span>#define EVENT_CC2   0x02</span>
+						<span>#define EVENT_CC3   0x03</span>
+						<span>#define EVENT_CC4   0x04</span>
+						<span>    ms_uint8_t     trigger_event;                                       /*  为 adc 提供的触发事件类型   */</span>
+						<span>} config_pwm_for_ad_t;</span>
+						<span></span>
+						<span>typedef struct conv_sequence {</span>
+						<span>    ms_uint32_t     channel;</span>
+						<span>    char            desc[32];</span>
+						<span>}conv_sequence_t;</span>
+						<span></span>
+						<span>conv_sequence_t sequence[] = {</span>
+						<span>        {0, "0"},</span>
+						<span>        {1, "1"},</span>
+						<span>        {2, "2"},</span>
+						<span>        {3, "3"},</span>
+						<span>        {4, "4"},</span>
+						<span>        {5, "5"},</span>
+						<span>        {6, "6"},</span>
+						<span>        {7, "7"},</span>
+						<span>        {8, "8"},</span>
+						<span>        {9, "9"},</span>
+						<span>        {10, "10"},</span>
+						<span>        {11, "16"},</span>
+						<span>        {12, "12"},</span>
+						<span>        {13, "13"},</span>
+						<span>        {14, "14"},</span>
+						<span>        {15, "15"},</span>
+						<span>};</span>
+						<span></span>
+						<span>/*</span>
+						<span> * 使用定时器做触发源</span>
+						<span> */</span>
+						<span>void timer_pwm_output_test (char *timer_path, ms_uint8_t pwm_ch, ms_uint8_t event_trig)</span>
+						<span>{</span>
+						<span>    int                 fd;</span>
+						<span>    config_timer_t      timer_cfg;</span>
+						<span>    config_pwm_for_ad_t config_pwm_for_ad;</span></span>
+						<span>    int                 res;</span>
+						<span></span>
+						<span>    fd = ms_io_open(timer_path, O_RDWR, 0666);</span>
+						<span>    if (fd < 0) {</span>
+						<span>        printf("open error!\n");</span>
+						<span>        return;</span>
+						<span>    }</span>
+						<span></span>
+						<span>    timer_cfg.psc               = 0;                                    /*  0x0000 and 0xFFFF           */</span>
+						<span>    timer_cfg.intval            = 10000 - 1;                            /*  0x0000 and 0xFFFF           */</span>
+						<span>    config_pwm_for_ad.compare   = 1000;</span>
+						<span></span>
+						<span>    timer_cfg.count_mod  = 0;</span>
+						<span>    res = ms_io_ioctl(fd, CMD_TIMER_CONFIG, &timer_cfg);</span>
+						<span>    ms_printf("CMD_TIMER_CONFIG: %d\n", res);</span>
+						<span></span>
+						<span>    res = ms_io_ioctl(fd, CMD_TIMER_START, MS_NULL);</span>
+						<span>    ms_printf("CMD_TIMER_START: %d\n", res);</span>
+						<span></span>
+						<span>    /*</span>
+						<span>     * 占空比 = compare / (intval + 1) * 100%</span>
+						<span>     */</span>
+						<span>    config_pwm_for_ad.pwm_en        = MS_TRUE;</span>
+						<span>    config_pwm_for_ad.polarity      = 1;</span>
+						<span>    config_pwm_for_ad.pwm_ch        = pwm_ch;</span>
+						<span>    config_pwm_for_ad.trigger_event = event_trig;</span>
+						<span>    res = ms_io_ioctl(fd, CMD_TIMER_WAVE_SET_FOR_ADC, &config_pwm_for_ad);</span>
+						<span>    ms_printf("CMD_TIMER_WAVE_SET_FOR_ADC: %d\n", res);</span>
+						<span>}</span>
+						<span></span>
+						<span>int adc_soft_trigger_test(void)</span>
+						<span>{</span>
+						<span>    /*</span>
+						<span>     *  将通道对应引脚接到 0V - 3.3V 的电压上, 输出的值应该为 0 - 4095</span>
+						<span>     */</span>
+						<span></span>
+						<span>    int fd;</span>
+						<span>    int ret;</span>
+						<span>    config_adc_t  config;</span>
+						<span>    ms_uint16_t value[16] = {0};</span>
+						<span>    int i;</span>
+						<span></span>
+						<span>    fd = ms_io_open("/dev/adc1", O_RDWR, 0666);</span>
+						<span>    if (fd < 0) {</span>
+						<span>        printf("open error!\n");</span>
+						<span>        return -1;</span>
+						<span>    }</span>
+						<span></span>
+						<span>    ret = ms_io_ioctl(fd, CMD_ADC_STOP, MS_N</span>ULL);</span>
+						<span>    printf("CMD_ADC_STOP: %d\n", ret);</span></span>
+						<span>    /*</span>
+						<span>     * 配置规则组</span>
+						<span>     */</span>
+						<span>    config.conv_length = MS_ARRAY_SIZE(sequence);</span>
+						<span>     for (i = 0; i < config.conv_length; i++) {</span>
+						<span>         config.conv_seq[i] = sequence[i].channel;             //填写采集序列, 最长不能超过 16 个</span>
+						<span>     }</span>
+						<span>    config.exttrig_src  = ADC_EXTTRIG_SRC_NONE;</span>
+						<span>    ret = ms_io_ioctl(fd, CMD_ADC_CONFIG, &config);</span>
+						<span>    if (ret < 0) {</span>
+						<span>        ms_printf("adc config error!\n");</span>
+						<span>        return -1;</span>
+						<span>    }</span>
+						<span>    ms_printf("CMD_ADC_CONFIG end\n");</span>
+						<span></span>
+						<span>    int count = 0;</span>
+						<span>    while (1) {</span>
+						<span></span>
+						<span>        /*</span>
+						<span>        * 不用定时器，使用软件手动触发（每 10ms 触发一次）</span>
+						<span>         */</span>
+						<span>        ms_io_ioctl(fd, CMD_ADC_SOFT_TRIG, &config);</span>
+						<span>        ms_thread_sleep_ms(1000);</span>
+						<span>        ms_io_read(fd, (ms_ptr_t)&value, config.conv_length * sizeof(ms_uint16_t));</span>
+						<span>        count++;</span>
+						<span>        if (count == 1) {</span>
+						<span>            count = 0;</span>
+						<span>            ms_printf("read:\n");</span>
+						<span>            for (i = 0; i < config.conv_length; i++) {</span>
+						<span>                ms_printf("[%s] = %x,", sequence[i].desc, value[i]);</span>
+						<span>                printf("(%f)\n", (float)value[i] * 3.3 / 4096.0);</span>
+						<span>            }</span>
+						<span>            ms_printf("\n\n");</span>
+						<span>        }</span>
+						<span></span>
+						<span>    }</span>
+						<span></span>
+						<span>    while(1) {</span>
+						<span>        ms_thread_sleep_ms(1000);</span>
+						<span></span>
+						<span>    }</span>
+						<span>    ms_io_close(fd);</span>
+						<span>}</span>
+						<span></span>
+						<span>int adc_timer_trigger_test(ms_uint32_t exttrig_src)</span>
+						<span>{</span>
+						<span>    int             fd;</span>
+						<span>    int             ret;</span>
+						<span>    int             i;</span>
+						<span>    size_t          len;</span>
+						<span>    config_adc_t    config;</span>
+						<span>    ms_uint16_t     val[16];</span>
+						<span>    int             count;</span>
+						<span>    int res;</span>
+						<span></span>
+						<span>   fd = ms_io_open("/dev/adc1", O_RDWR, 0666);</span>
+						<span>    if (fd < 0) {</span>
+						<span>        printf("open error!\n");</span>
+						<span>        return -1;</span>
+						<span>    }</span>
+						<span></span>
+						<span>    res = ms_io_ioctl(fd, CMD_ADC_STOP, MS_NULL);</span>
+						<span>    printf("CMD_ADC_STOP: %d\n", res);</span>
+						<span></span>
+						<span>    config.conv_length = MS_ARRAY_SIZE(sequence);</span>
+						<span>    for (i = 0; i < config.conv_length; i++) {</span>
+						<span>        config.conv_seq[i] = sequence[i].channel;              //填写采集序列, 最长不能超过 16 个</span>
+						<span>    }</span>
+						<span>    config.exttrig_src  = exttrig_src;</span>
+						<span></span>
+						<span>    ret = ms_io_ioctl(fd, CMD_ADC_CONFIG, &config);</span>
+						<span>    if (ret < 0) {</span>
+						<span>       ms_printf("adc config error!\n");</span>
+						<span>        return -1;</span>
+						<span>    }</span>
+						<span>    ms_printf("adc config success!\n");</span>
+						<span></span>
+						<span>    count = 0;</span>
+						<span>    while (1) {</span>
+						<span>        /*</span>
+						<span>         * 用外部触发采集,c重新配置一次触发</span>
+						<span>        */</span>
+						<span>        len = 0;</span>
+						<span>        while (len < config.conv_length * sizeof(ms_uint16_t)) {</span>
+						<span>            ret = ms_io_read(fd, (ms_ptr_t)&val, config.conv_length * sizeof(ms_uint16_t) - len);</span>
+						<span>            len += ret;</span>
+						<span>        }</span>
+						<span>#if 1</span>
+						<span>        /*</span>
+						<span>         * 频率过高时，需要取消打印</span>
+						<span>         */</span>
+						<span>        count++;</span>
+						<span>        if (count == 1) {</span>
+						<span>            count = 0;</span>
+						<span>            ms_printf("read:\n");</span>
+						<span>            for (i = 0; i < config.conv_length; i++) {</span>
+						<span>                ms_printf("[%s] = %x,", sequence[i].desc,  val[i]);</span>
+						<span>                printf("(%f)\n", (float)val[i] * 3.3 / 4096.0);</span>
+						<span>            }</span>
+						<span>            ms_printf("\n\n");</span>
+						<span>        }</span>
+						<span>#endif</span>
+						<span>    }</span>
+						<span></span>
+						<span></span>
+						<span>    ms_io_close(fd);</span>
+						<span>}</span>
+						<span></span></span>
+						<span>int main (int argc, char **argv)</span></span>
+						<span>{</span></span>
+						<span>    /*</span></span>
+						<span>     *              通道号     外部引脚    有权使用的ADC    功能</span></span>
+						<span>     *  channel     0          PA0         ADC 1</span></span>
+						<span>     *  channel     1          PA1         ADC 1</span></span>
+						<span>     *  channel     2          PA2         ADC 1</span>
+						<span>     *  channel     3          PA3         ADC 1</span></span>
+						<span>     *  channel     4          PA4         ADC 1</span></span>
+						<span>     *  channel     5          PA5         ADC 1</span></span>
+						<span>     *  channel     6          PA6         ADC 1</span></span>
+						<span>     *  channel     7          PA7         ADC 1</span></span>
+						<span>     *  channel     8          PB0         ADC 1</span></span>
+						<span>     *  channel     9          PB1         ADC 1</span></span>
+						<span>     *  channel     10         PC0         ADC 1</span></span>
+						<span>     *  channel     11         PC1         ADC 1</span></span>
+						<span>     *  channel     12         PC2         ADC 1</span></span>
+						<span>     *  channel     13         PC3         ADC 1</span></span>
+						<span>     *  channel     14         PC4         ADC 1</span></span>
+						<span>     *  channel     15         PC5         ADC 1</span></span>
+						<span>     *</span></span>
+						<span>     *  捕获值 0x0000 - 0x0fff 即 (0V - 3.3V)</span></span>
+						<span>     */</span>
+						<span></span>
+						<span>    /*</span>
+						<span>     * 手动触发每次采集: 每 10ms, 执行一次 CMD_ADC_SOFT_TRIG</span>
+						<span>    */</span>
+						<span>    adc_soft_trigger_test();</span>
+						<span></span>
+						<span>   /*</span>
+						<span>     * 在 pwm 波上升沿触发 ad 采集， 一次采集 16 路 (注意 adc2 有几个通道无法采集)</span>
+						<span>    */</span>
+						<span>//    char timer_path[] = "/dev/timer1";</span>
+						<span>//    ms_uint8_t pwm_ch = 1;</span>
+						<span>//    ms_uint8_t event_trig = EVENT_CC1;</span>
+						<span>//    ms_uint32_t exttrig_src = ADC_EXTTRIG_SRC_T1_CH1;</span>
+						<span></span>
+						<span>//    char timer_path[] = "/dev/timer1";</span>
+						<span>//    ms_uint8_t pwm_ch = 2;</span>
+						<span>//    ms_uint8_t event_trig = EVENT_CC2;</span>
+						<span>//    ms_uint32_t exttrig_src = ADC_EXTTRIG_SRC_T1_CH2;</span>
+						<span></span>
+						<span>//    char timer_path[] = "/dev/timer1";</span>
+						<span>//    ms_uint8_t pwm_ch = 3;</span>
+						<span>//    ms_uint8_t event_trig = EVENT_CC3;</span>
+						<span>//    ms_uint32_t exttrig_src = ADC_EXTTRIG_SRC_T1_CH3;</span>
+						<span></span>
+						<span>//    timer_pwm_output_test(timer_path, pwm_ch, event_trig);</span>
+						<span>//    adc_timer_trigger_test(exttrig_src);</span>
+						<span>    return  (0);</span>
+						<span>}</span>
+					</pre>
 				</p>
                 <p>以内核模块装载的方式，创建 RTC 设备以及驱动安装。</p>
 				<pre>
