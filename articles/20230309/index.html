@@ -92,9 +92,8 @@
 					调试查看测试结果后，发现不同波特率下丢弃的帧，帧ID为固定的值。故怀疑问题出在驱动代码<br>
 					在 MS-RTOS 创建 CAN 设备的函数 gd32_can_dev_create 里发现了对于 CAN 和 CAN 滤波器的配置代码，对照手册后发现，问题出在函数__can_filter_init <br>
 					<img class="img" id="img2" src="img2.jpg"><br>
-					<img class="img" id="img3" src="img3.jpg"><br>
 					在函数__can_filter_init中，对于 CAN 滤波器的掩码模式和列表模式的过滤器数据寄存器值配置有误，应均设置为0 <br>
-                    <img class="img" id="img4" src="img4.jpg"><br>
+                    <img class="img" id="img3" src="img3.jpg"><br>
 					修改后测试，CAN 通信再无丢帧现象发生<br>
 				</p>
                 <p>以内核模块装载的方式，创建 RTC 设备以及驱动安装。</p>
