@@ -329,7 +329,76 @@
 					<img class="img" id="img6" src="img6.jpg"><br>
 					测试得出 ADC 硬件触发与软件触发功能均正常。
 				</p>
-                <hr>
+				<h4><a name="GPIO中断问题" href="#GPIO中断问题">GPIO 中断问题</a></h4>
+				<p>
+				    对于应用开发者，操作系统是不会将中断注册、中断服务接口暴露给其直接使用的，所以对于用户而言，使用读取具备中断功能的 GPIO 的方式是使用具备阻塞功能的 select 接口。<br>
+                    示例如下：
+					<pre>
+						<span>#include &lt;ms_rtos.h&gt;</span>
+						<span></span>
+						<span>#define LED1_GPIO_DEV_FILE   "/dev/led1"</span>
+						<span>#define KEY1_GPIO_DEV_FILE   "/dev/key1"</span>
+						<span></span>
+						<span>int main (int argc, char **argv)</span>
+						<span>{</span>
+						<span>    int             ret;</span>
+						<span>    int             fd_key,fd_led;</span>
+						<span>    ms_gpio_param_t param;</span>
+						<span>    ms_fd_set_t     efds;</span>
+						<span>    ms_timeval_t    tv;</span>
+						<span>    ms_bool_t       var;</span>
+						<span></span>
+						<span>    fd_led = ms_io_open(LED1_GPIO_DEV_FILE, O_RDWR, 0666);</span>
+						<span></span>
+						<span>    param.mode  = MS_GPIO_MODE_OUTPUT_PP;</span>
+						<span>    param.pull  = MS_GPIO_PULL_NONE;</span>
+						<span>    param.speed = MS_GPIO_SPEED_HIGH;</span>
+						<span>    ms_io_ioctl(fd_led, MS_GPIO_CMD_SET_PARAM, &param);</span>
+						<span></span>
+						<span>    fd_key = ms_io_open(KEY1_GPIO_DEV_FILE, O_RDONLY, 0666);</span>
+						<span>    if (fd_key < 0) {</span>
+						<span>       ms_printf("[error]: open device file %s failed!\n", KEY1_GPIO_DEV_FILE);</span>
+						<span>        return  (MS_NULL);</span>
+						<span>    }</span>
+						<span></span>
+						<span>    param.mode  = MS_GPIO_MODE_IRQ_FALLING;</span>
+						<span>    param.pull  = MS_GPIO_PULL_NONE;</span>
+						<span>    param.speed = MS_GPIO_SPEED_HIGH;</span>
+						<span>    ms_io_ioctl(fd_key, MS_GPIO_CMD_SET_PARAM, &param);</span>
+						<span></span>
+						<span>    FD_ZERO(&efds);</span>
+						<span></span>
+						<span>    while (1) {</span>
+						<span>        FD_SET(fd_key, &efds);</span>
+						<span>        tv.tv_sec  = 2;</span>
+						<span>        tv.tv_usec = 0;</span>
+						<span></span>
+						<span>        ret = ms_io_select(fd_key + 1, &efds, NULL, NULL, &tv);</span>
+						<span>        if (ret == 1) {</span>
+						<span>            ms_io_read(fd_led,&var,sizeof(ms_uint8_t));</span>
+						<span>            ms_printf("value1 : %d\n", var);</span>
+						<span>            if(var == 1){</span>
+						<span>                var = 0;</span>
+						<span>            }else{</span>
+						<span>                var = ~var;</span>
+						<span>            }</span>
+						<span>            ms_printf("value2 : %d\n", var);</span>
+						<span>            ms_io_write(fd_led,&var,sizeof(ms_uint8_t));</span>
+						<span>            usleep(1000 * 1000);</span>
+						<span>        } else if (ret < 0) {</span>
+						<span>            ms_printf("select error!\n");</span>
+						<span>            break;</span>
+						<span>        }</span>
+						<span>    }</span>
+						<span></span>
+						<span>    ms_io_close(fd_key);</span>
+						<span>    ms_io_close(fd_led);</span>
+						<span></span>
+						<span>    return  (0);</span>
+						<span>}</span>
+					</pre>
+				</p>
+				<hr>
                 <br>
                 <span class="iconfontmini icon-aboutcircle"></span> 原创内容使用 知识共享 署名-非商业性使用-相同方式共享 4.0 (CC BY-NC-ND 4.0)
                 协议授权。
