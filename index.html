@@ -15,7 +15,28 @@
     <link rel="manifest" href="site.webmanifest">
     <link rel="icon" href="favicon.ico">
 
+
     <style>
+		/* 添加到现有的CSS文件或<style>标签中 */
+		
+		/* 视频容器样式 */
+		.video-container {
+		    position: fixed; /* 固定位置 */
+		    right: 0; /* 右侧对齐 */
+		    bottom: auto; /* 底部对齐，可根据需要调整 */
+		    width: 888px; /* 播放器宽度 */
+		    height: auto; /* 高度自适应 */
+		    z-index: 1000; /* 确保播放器在页面其他内容之上 */
+		}
+		
+		/* 视频样式 */
+		.video-container video {
+		    width: 100%; /* 视频宽度占满容器 */
+		    height: auto; /* 高度自适应 */
+		    border: 1px solid #ccc; /* 添加边框，可根据需要调整 */
+		    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* 添加阴影，提升立体感 */
+		}
+
 @media (max-width: 700px) {
         .hometitle {
             top: 20% !important;
@@ -76,6 +97,14 @@
             </div>
         </header>
 
+    <div class="video-container">
+        <video controls width="100%" height="auto">
+            <source src="./1.mp4" type="video/mp4">
+            <source src="path_to_your_video.ogg" type="video/ogg">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+	
         <div class="overlay"></div>
         <div class="text hometitle" id="text">
             <h2>漫游太阳系</h2>
@@ -88,7 +117,7 @@
             </p>
             <a class="button" href="articles/">Start Now</a>
         </div>
-        <ul class="social">yx
+        <ul class="social">
 
             <li><a href="about/"><span class="iconfont icon-about"></span></a></li>
             <li><a href="http://github.com/tuoyuxuan" target="_blank" rel="noreferrer"><span
